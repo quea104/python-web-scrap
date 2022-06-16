@@ -1,85 +1,109 @@
-#22.06.14~16
+#22.06.14~16 KITRI 파이썬으로 웹 크롤러 만들기
 
 ---
 - 웹 크롤링
-    - 인터넷의 데이터(HTML, 이미지, 동엿아, 음성)을 기계적으로 수집하는 행위
+    - 인터넷의 데이터(HTML, 이미지, 동영상, 음성)을 기계적으로 수집하는 행위
+    - 특정 웹 페이지가 없음
+    - 선탐색 후추출 : 탐색부터 하고, 정보를 가져오기
 
 - 웹 스크래핑
     - 웹 페이지의 HTML을 가져와서 원하는 정보를 뽑아(extract) 내는 것
+    - 목표로 하는 특정 웹페이지가 존재
 
     - 합법적인가?
         - 저작권 위반, 업무방해죄
 
     - 절차
-        1. 사전작업: 웹 페이지 분석
-           - HTTP 포함 웹 기초
-        2. HTML 전체 가져오기
-           - request : HTTP 클라이언트 라이브러리 사용, 최초로 응답 준 정보만 사용 가능.
-           - 터미널에서 requests 패키지 설치
-           - 예시
-           ```
-           import requests
-           
-           res = requests.get('https://finance.naver.com/')
-           ```
-           - 만약 호출시 Response [406] 에러(unauthorized error)가 발생하면 웹 스크래핑을 차단한 페이지임.
-        3. 가져온 HTML에서 데이터 추출 - parser
-           - beautifulsoup: 파이썬 대표 HTML parser (for web scraping), 오픈소스
-           - 터미널에서 beautifulsoup 패키지 설치           
-           - CSS seelector 활용
-             > chrome > F12(검사) > 해당 element > 오른쪽 마우스 클릭 > copy > copy selector
-           - selector 예
-             > #content > div > section > div > div > ul > li:nth-child(1) > h3 > a
-           - 예시
-             ```
-             import requests
-             from bs4 import BeautifulSoup
+        1. 선정(대상선정)
+           - 사전작업 -> 웹 페이지 분석
+           - 웹에서는 how 보다 where가 더 중요.
+        2. 수집(대상 위치에서 원하는 데이터 수집)
+           - HTML 전체 가져오기
+              - request 라이브러리 활용
+                - HTTP 클라이언트 라이브러리, 최초로 응답 준 정보만 사용 가능
+                - 터미널에서 requests 패키지 설치
+                - 예시
+                  ```
+                  import requests
+                  res = requests.get('https://finance.naver.com/')
+                  ```
+           - 사람 처럼 읽기
+             - 만약 호출시 Response [406] 에러(unauthorized error)가 발생하면 웹 스크래핑을 차단한 페이지임
+             - 그럴 경우 사람인 것처럼 가장하여 처리
+               1. HTTP > Request Headers > my user agent 이용
+                  - 구글 브라우저에서 'my user agent' 검색
+                    > Mozilla/5.0 (Windows NT 10.0; Win64; -이하 생략-
+                  - 페이지 호출 할 때 header에 user agent 값 넘겨주기 
+                    ```
+                    headers = {
+                       'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36'
+                    }
+                    # header 위변조
+                    res = requests.get('https://www.melon.com/chart/index.htm', headers=headers)
+                    ```
+               2. selenium
+                  - 테스트 자동화, 웹 스크래핑에서 사용
+                  - chromedriver.exe 설치 필요
+                    1. 로컬 크롬의 버전 확인
+                       - 주소창에서 chrome://version 입력 후 나오는 페이지에서 'Chrome: {로컬 크롬 브라우저 버전} (공식 빌드)' 확인
+                    2. 그 버전과 동일한 크롬 드라이버 받기
+                       - https://chromedriver.chromium.org/downloads
+                    3. 다운 받은 크롬 드라이버 설치 파일(chromedriver.exe)을 파이썬 파일이 존재하는 동일한 경로에 넣기
+                  - XPATH 활용
+                    - CSS selector 경로가 인식이 안될 경우 full xpath로 대체하기
+                    > chrome > F12(검사) > 해당 element > 오른쪽 마우스 클릭 > copy > copy full xpath
+        3. 정리
+           1. 가져온 HTML에서 데이터 추출 - parser
+              - beautifulsoup 라이브러리 활용
+                - 파이썬 대표 HTML parser (for web scraping), 오픈소스
+                - 터미널에서 beautifulsoup 패키지 설치
+              - CSS seelector 활용
+                > chrome > F12(검사) > 해당 element > 오른쪽 마우스 클릭 > copy > copy selector
+              - selector 예
+                > #content > div > section > div > div > ul > li:nth-child(1) > h3 > a
+              - 예시
+                ```
+                import requests
+                from bs4 import BeautifulSoup
              
-             res = requests.get('https://finance.naver.com/')
+                res = requests.get('https://finance.naver.com/')
              
-             soup = BeautifulSoup(res.text, 'html.parser')
-             element = soup.select_one('#content > div > section > div > div > ul > li:nth-child(1) > h3 > a')
+                soup = BeautifulSoup(res.text, 'html.parser')
+                element = soup.select_one('#content > div > section > div > div > ul > li:nth-child(1) > h3 > a')
              
-             print(element.text)
-             ```
-        4. 가져온 데이터를 파일로 저장
-           - pandas : 데이터 분석 툴 라이브러리, 가장 많이 사용, dataframe 다룸.
-           - 터미널에서 pandas 패키지 설치
-           - 예시
-             ```
-             import requests             
-             from bs4 import BeautifulSoup
-             # coding conventions => 많이 사용해서 별칭을 사용
-             import pandas as pd
+                print(element.text)
+                ```
+           2. 추출한 데이터를 파일로 저장
+              - 데이터 형태: 타뷸러 데이터(?), 2차원 행렬(백터) 데이터
+              - pandas 라이브러리 활용
+                - 데이터 분석 툴 라이브러리, 가장 많이 사용, dataframe.
+                - 터미널에서 pandas 패키지 설치
+              - 데이터를 pandas 라이브러리를 사용하여 엑셀로 저장
+              - python에서 데이터 형태: 이중 리스트로 표현.
+              - 예시
+                ```
+                import requests             
+                from bs4 import BeautifulSoup
+                # coding conventions => 많이 사용해서 별칭을 사용
+                import pandas as pd
              
-             res = requests.get('https://finance.naver.com/')
+                res = requests.get('https://finance.naver.com/')
              
-             soup = BeautifulSoup(res.text, 'html.parser')
-             element = soup.select_one('#content > div > section > div > div > ul > li:nth-child(1) > h3 > a')
+                soup = BeautifulSoup(res.text, 'html.parser')
+                element = soup.select_one('#content > div > section > div > div > ul > li:nth-child(1) > h3 > a')
              
-             df = pd.DataFrame(element.text)
-             df.to_excel('python-event.xlsx')
-             ```
-        5. 사람 처럼 읽기
-         - HTTP > Request Headers > my user agent 이용
-         - 구글 브라우저에서 'my user agent' 검색
-           > Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36
+                df = pd.DataFrame(element.text)
+                df.to_excel('python-event.xlsx')
+                ```
            
 - pip
   - 파이썬으로 작성된 패키지 소프트웨어를 설치 · 관리하는 패키지 관리 시스템
   - pip 버전
     > pip --version
 
-- 웹 데이터 수집
-  - 데이터 수집의 3단계
-    1. 선정(대상선정)
-       - 웹에서는 how 보다 where가 더 중요.
-    2. 수집(대상 위치에서 원하는 데이터 수집)
-    3. 정리
-       - 데이터 형태: 타뷸러 데이터, 2차원 행렬(백터) 데이터.
-       - python에서 데이터 형태: 이중 리스트로 표현.
-       - 데이터를 pandas를 사용하여 엑셀로 저장
-  
+- PEP
+  - python style guide
+  - 통합 개발 환경(Integrated Development Environment, IDE)로 python 코딩하면 자동으로 코딩 가이드 안내해 줌.
 
 - 터미널에서 패키지 설치
   1. requests : HTTP library
@@ -92,7 +116,6 @@
      > pip install pandas
   5. lxml : Powerful and Pythonic XML processing library, parsing 속도가 빠름
      > pip install lxml
- 
 
 - 설치 오류
   - 오류: pip install --upgrade pip 하고 나서 pip, python 명령어를 터미널에서 인식을 못함
@@ -108,6 +131,7 @@
      python get-pip.py
     ```
 
+---
 - 추가 설명
   - pandas 라이브러리
     - 개발자 Wes McKinney 개발
@@ -141,7 +165,7 @@
         ```
         let a = [1, 2, 3, 4, 5];
         for(let i = 0; i < 5; i += 1) { 
-          if(a[i] % 2 === ) {
+          if(a[i] % 2 === 0) {
             console.log(a[i]);
           }
         }
@@ -149,13 +173,9 @@
     - Declarative Prograaming
       - 절차적 프로그래밍(What)
       - 알고리즘을 명시 하지않고 목표만 명시한다.
-        ```
-        let a = [1, 2, 3, 4, 5];
-        for(let i = 0; i < 5; i += 1) { 
-          if(a[i] % 2 === ) {
-            console.log(a[i]);
-          }
-        }
-        ```
+
+---      
+- 강의 소스
+  - https://github.com/soongon/web-scrap-2022
 
 ---

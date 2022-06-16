@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 
 res = requests.get('https://www.python.org/events/')
 
+# res.text : request의 body 가져오기
 soup = BeautifulSoup(res.text, 'html.parser')
 
 # list 반환

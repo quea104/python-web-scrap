@@ -1,22 +1,26 @@
+import pprint
+
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-headers = {
-    'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36'
-}
-res = requests.get('https://www.coupang.com/np/search?component=&q=%EC%83%9D%EC%88%98&channel=user', headers=headers)
-print(res)
+res = requests.get('https://www.ssg.com/service/emart/dvstore/category.ssg?dispCtgId=6000095739')
 
-soup = BeautifulSoup(res.text, 'html.parser')
+soup = BeautifulSoup(res.text, 'lxml')
 
-a_item = [
-    soup.select_one('#\35 625704601 > a > dl > dd > div > div.name').text,
-    soup.select_one('#\35 625704601 > a > dl > dd > div > div.price-area > div > div.price > em > strong').text,
-    soup.select_one('#\35 625704601 > a > dl > dd > div > div.price-area > div > div.price > span').text,
-    soup.select_one('#\35 625704601 > a > dl > dd > div > div.price-area > div > div.delivery > span > em:nth-child(1)').text,
-]
+li_list = soup.select('#ty_thmb_view > ul > li')
 
-pd.DataFrame(a_item).to_excel('coupang.xlsx')
+products = []
+
+for li in li_list:
+    products.append([
+            li.select_one('div.cunit_info > div.cunit_md.notranslate > div > a > em.tx_ko').text,
+            int(li.select_one('div.cunit_info > div.cunit_price > div.opt_price > em').text.replace(',', '')),
+            'https://' + li.select_one('div.cunit_prod > div.thmb > a > img.i1')['src'],
+    ])
+
+pprint.pprint(products)
+
+pd.DataFrame(products).to_excel('ssg.xlsx', header=['상품명', '가격', '사진'], index=False)
 
 print('OK')
