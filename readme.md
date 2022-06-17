@@ -175,5 +175,8 @@
 ---      
 - 강의 소스
   - https://github.com/soongon/web-scrap-2022
+- PyCharm: Python IDE
+  - https://www.jetbrains.com/ko-kr/pycharm/download/#section=windows
+  - community 버전 무료
 
 ---
